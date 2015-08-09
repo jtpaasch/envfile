@@ -38,12 +38,17 @@ Interactive mode
 ----------------
 
 If you use the `-i` or `--interactive` flag, `envfile` will ask you
-about each variable before it loads it into the environment:
+about each variable before it loads it into the environment. For example,
+if you do this:
 
     $ source envfile --interactive .env
 
-At each prompt, you can either just hit `Enter` to accept the current value, 
-or you can type in a new value.
+`envfile` will ask about each value from `.env` in turn:
+
+    $ Enter a new value for FOO (was a): 
+    $ Enter a new value for BAR (was b): 
+
+At each prompt, enter a new value, or hit `Enter` to make it empty.
 
 
 Output
