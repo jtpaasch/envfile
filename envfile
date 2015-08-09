@@ -130,13 +130,23 @@ fi
 if [ "$INTERACTIVE" != "TRUE" ]; then
     while read line; do
 
+        # We don't care about empty lines.
+        if [[ -z $line ]]; then
+            continue
+        fi
+
+        # We don't care about comments.
+        if [[ ${line:0:1} == '#' ]]; then
+            continue
+        fi
+
         # Each line should be in a KEY=VALUE format,
         # so we can just export it directly.
-        export $line
+        export "$line"
 
         # Let's also print the line to STDOUT, in case
         # the user wants to redirect the output into a file.
-        echo $line
+        echo "$line"
 
     done < $ENVFILE
 fi
@@ -150,6 +160,16 @@ if [ "$INTERACTIVE" == "TRUE" ]; then
 
     # Handle each line, one at a time.
     for line in $(cat $ENVFILE); do
+
+        # We don't care about empty lines.
+        if [[ -z $line ]]; then
+            continue
+        fi
+
+        # We don't care about comments.
+        if [[ ${line:0:1} == '#' ]]; then
+            continue
+        fi
 
         # Extract the KEY and VALUE from the KEY=VALUE pair.
         KEY=`echo $line | cut -d '=' -f 1`
@@ -166,7 +186,7 @@ if [ "$INTERACTIVE" == "TRUE" ]; then
         read -p "Enter a new value for $KEY $DEFAULT_PROMPT: " INPUT
 
         # Export the new KEY=VALUE pair.
-        export $KEY=$INPUT
+        export "$KEY"="$INPUT"
 
         # Add the KEY=VALUE pair to the OUTPUT.
         OUTPUT="$OUTPUT $KEY=$INPUT"$'\n'
