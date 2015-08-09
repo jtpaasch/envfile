@@ -1,28 +1,23 @@
 ENVFILE
 =======
 
-Loads/unloads variables from a file into the environment.
-
-    $ source envfile --help
+Loads/unloads variables from a file into the environment. 
 
 
 Usage
 -----
 
-Create a file with some regular old bash variables in it, e.g.:
+Suppose you have a file called `.env` with the following contents:
 
-    $ echo 'FOO=a' >> .env
-    $ echo 'BAR=b' >> .env
+    FOO=a
+    BAR=b
 
-Load those into the environment as environment variables:
+You can load those values into your shell as environment variables like this:
 
     $ source envfile .env
 
-Confirm that it worked.
-
-    $ echo $FOO # outputs 'a'
-
-Unload the variables from the environment:
+You can later unload those variables from the environment using 
+the `-u` or `--unload` flag:
 
     $ source envfile --unload .env
 
@@ -49,4 +44,10 @@ provide new values, then save the output as `.env2`:
 Then later, you could reload those values into your environment:
 
     $ source envfile .env2
+
+Help
+----
+
+    $ source envfile --help
+
 
