@@ -155,16 +155,17 @@ if [ "$INTERACTIVE" == "TRUE" ]; then
         KEY=`echo $line | cut -d '=' -f 1`
         VALUE=`echo $line | cut -d '=' -f 2`
 
-        # Ask the user to accept or override the value.
-        read -p "Enter a value for $KEY: " INPUT
-
-        # If the user didn't enter anything,
-        # use the original value as the default.
-        if [ -z "${INPUT}" ]; then
-            INPUT=$VALUE
+        # What should we say about the default value?
+        if [ ! -n $VALUE ]; then
+            DEFAULT_PROMPT="(was empty)"
+        else
+            DEFAULT_PROMPT="(was $VALUE)"
         fi
 
-        # Export the KEY=VALUE pair.
+        # Ask the user to accept or override the value.
+        read -p "Enter a new value for $KEY $DEFAULT_PROMPT: " INPUT
+
+        # Export the new KEY=VALUE pair.
         export $KEY=$INPUT
 
         # Add the KEY=VALUE pair to the OUTPUT.

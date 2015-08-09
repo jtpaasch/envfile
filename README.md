@@ -4,6 +4,15 @@ ENVFILE
 Loads/unloads variables from a file into the environment. 
 
 
+Installation
+------------
+
+Clone or download the repo and install the `envfile` script as you would
+any other script:
+
+    $ install envfile /usr/local/bin
+
+
 Usage
 -----
 
@@ -21,14 +30,20 @@ the `-u` or `--unload` flag:
 
     $ source envfile --unload .env
 
+Of course, you could also just close the shell, since the variables are 
+only exported into your current shell environment.
 
-Interactive
------------
+
+Interactive mode
+----------------
 
 If you use the `-i` or `--interactive` flag, `envfile` will ask you
-about each variable before it loads it into the environment. You can
-either just hit `Enter` to accept the current value, or you can type
-in a new value.
+about each variable before it loads it into the environment:
+
+    $ source envfile --interactive .env
+
+At each prompt, you can either just hit `Enter` to accept the current value, 
+or you can type in a new value.
 
 
 Output
