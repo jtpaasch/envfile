@@ -29,17 +29,6 @@ function helphint {
     echo "See: source $PROGRAM_NAME --help"
 }
 
-# A function that unloads/unsets all variables listed in a file.
-function unload {
-    if [ -z $1 ]; then
-        return 1
-    fi
-    if [ ! -f $1 ]; then
-        return 1
-    fi
-    unset $(cut -d '=' -f 1 $1)
-}
-
 # A function to get rid of variables so they don't stick around in
 # the shell after this script has been sourced.
 function cleanup {
@@ -49,7 +38,6 @@ function cleanup {
     unset INTERACTIVE
     unset usage
     unset helphint
-    unset unload
     unset cleanup
 }
 
@@ -59,7 +47,7 @@ PROGRAM_NAME=`basename $BASH_SOURCE`
 # Make sure the script is sourced.
 if [ "$0" == "$BASH_SOURCE" ]; then
     echo "You must source this script."
-    echo "Try: source $BASH_SOURCE --help"
+    echo "Try: source $PROGRAM_NAME --help"
     exit 1
 fi
 
@@ -117,17 +105,76 @@ if [ ! -f $ENVFILE ]; then
     return 1
 fi
 
+IFS=$'\n'
+
 # If the UNLOAD option was selected, unset all the
 # variables listed in the $ENVFILE.
 if [ "$UNLOAD" == "TRUE" ]; then
-    unload $ENVFILE
-    cleanup
-    return 0
-fi
+    while read line; do
 
-# If the INTERACTIVE option wasn't selected, we can export
-# the variables directly into the environment.
-if [ "$INTERACTIVE" != "TRUE" ]; then
+        # We don't care about empty lines.
+        if [[ -z $line ]]; then
+            continue
+        fi
+
+        # We don't care about comments.
+        if [[ ${line:0:1} == '#' ]]; then
+            continue
+        fi
+
+        # Extract the KEY from the KEY=VALUE pair and unset the variable.
+        KEY=`echo $line | cut -d '=' -f 1`
+        unset "$KEY"
+
+    done < $ENVFILE
+
+# If the INTERACTIVE option was selected, we want to stop on each line
+# in the ENVFILE and ask the user to accept (or change) each value.
+elif [ "$INTERACTIVE" == "TRUE" ]; then
+
+    # We'll collect all the final KEY=VALUE pairs here:
+    OUTPUT=''
+
+    # Handle each line, one at a time.
+
+    for line in $(cat $ENVFILE); do
+
+        # We don't care about empty lines.
+        if [[ -z $line ]]; then
+            continue
+        fi
+
+        # We don't care about comments.
+        if [[ "$line" == "#"* ]]; then
+            continue
+        fi
+
+        # Extract the KEY and VALUE from the KEY=VALUE pair.
+        KEY=`echo $line | cut -d '=' -f 1`
+        VALUE=`echo $line | cut -d '=' -f 2`
+
+        # Ask the user to accept or override the value.
+        read -p "New value for $KEY (was '$VALUE'): " INPUT
+
+        # Export the new KEY=VALUE pair.
+        export $KEY="$INPUT"
+
+        # Add the KEY=VALUE pair to the OUTPUT.
+        OUTPUT=$OUTPUT"$KEY=$INPUT"$'\n'
+
+    done
+
+    # Finally, clear the STDOUT buffer and print out all 
+    # the new KEY=VALUE pairs, in case the user wants to
+    # redirect the output into a file.
+    # clear
+    for line in $OUTPUT; do
+        echo $line
+    done
+
+# Finally, if we're not unloading the variables or setting them
+# interactively, we can load the variables directly into the environment.
+else
     while read line; do
 
         # We don't care about empty lines.
@@ -149,57 +196,6 @@ if [ "$INTERACTIVE" != "TRUE" ]; then
         echo "$line"
 
     done < $ENVFILE
-fi
-
-# If the INTERACTIVE option was selected, we want to stop on each line
-# in the ENVFILE and ask the user to accept (or change) each value.
-if [ "$INTERACTIVE" == "TRUE" ]; then
-
-    # We'll collect all the final KEY=VALUE pairs here:
-    OUTPUT=''
-
-    # Handle each line, one at a time.
-    for line in $(cat $ENVFILE); do
-
-        # We don't care about empty lines.
-        if [[ -z $line ]]; then
-            continue
-        fi
-
-        # We don't care about comments.
-        if [[ ${line:0:1} == '#' ]]; then
-            continue
-        fi
-
-        # Extract the KEY and VALUE from the KEY=VALUE pair.
-        KEY=`echo $line | cut -d '=' -f 1`
-        VALUE=`echo $line | cut -d '=' -f 2`
-
-        # What should we say about the default value?
-        if [ ! -n $VALUE ]; then
-            DEFAULT_PROMPT="(was empty)"
-        else
-            DEFAULT_PROMPT="(was $VALUE)"
-        fi
-
-        # Ask the user to accept or override the value.
-        read -p "Enter a new value for $KEY $DEFAULT_PROMPT: " INPUT
-
-        # Export the new KEY=VALUE pair.
-        export "$KEY"="$INPUT"
-
-        # Add the KEY=VALUE pair to the OUTPUT.
-        OUTPUT="$OUTPUT $KEY=$INPUT"$'\n'
-
-    done
-
-    # Finally, clear the STDOUT buffer and print out all 
-    # the new KEY=VALUE pairs, in case the user wants to
-    # redirect the output into a file.
-    # clear
-    for line in $OUTPUT; do
-        echo $line
-    done
 
 fi
 
