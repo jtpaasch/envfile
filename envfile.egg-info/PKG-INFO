@@ -1,0 +1,20 @@
+Metadata-Version: 1.1
+Name: envfile
+Version: 0.1.0
+Summary: Loads/unloads environment variables from a .env file.
+Home-page: https://github.com/jtpaasch/envfile
+Author: JT Paasch
+Author-email: jt.paasch@gmail.com
+License: MIT
+Description: Envfile
+        =======
+        
+        Loads/unloads environment variables from a ``.env`` file.
+        
+Keywords: environment variables
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.4

@@ -1,0 +1,3 @@
+[console_scripts]
+envfile = envfile.application:main
+
