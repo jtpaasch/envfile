@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+#
+# ENVFILE
+# Exports variables from a file into the environment.
+#
+# @author JT Paasch
+# @license MIT
+#
+
+# A function to display usage.
+function usage {
+    echo "-- ENVFILE --"
+    echo "Exports variables from a file into the environment."
+    echo ""
+    echo "USAGE:"
+    echo "  source $PROGRAM_NAME [options] <FILE>"
+    echo ""
+    echo "REQUIRED PARAMETERS:"
+    echo "  <FILE>  A file with KEY=VALUE declarations (one per line)."
+    echo ""
+    echo "OPTIONS:"
+    echo "  -h --help         Display help."
+    echo "  -i --interactive  Load/set each value from <FILE> interactively."
+    echo "  -u --unload       Remove values in <FILE> from the environment."
+}
+
+# A function to display how to get help.
+function helphint {
+    echo "See: source $PROGRAM_NAME --help"
+}
+
+# A function to get rid of variables so they don't stick around in
+# the shell after this script has been sourced.
+function cleanup {
+    unset PROGRAM_NAME
+    unset ENVFILE
+    unset UNLOAD
+    unset INTERACTIVE
+    unset usage
+    unset helphint
+    unset cleanup
+}
+
+# What is the name of the program?
+PROGRAM_NAME=`basename $BASH_SOURCE`
+
+# Make sure the script is sourced.
+if [ "$0" == "$BASH_SOURCE" ]; then
+    echo "You must source this script."
+    echo "Try: source $PROGRAM_NAME --help"
+    exit 1
+fi
+
+# If no arguments were provided, display the usage.
+if [ "$#" == "0" ]; then
+    echo "No arguments were provided."
+    helphint
+    cleanup
+    return 1
+fi
+
+# Step through the arguments, one by one.
+while (( "$#" )); do
+
+    # What's the value of this argument ($1)?
+    case $1 in 
+
+        # The help option: -h or --help
+        -h|--help)        usage
+                          cleanup
+                          return 1 
+                          ;;
+
+        # The interactive option: -i or --interactive
+        -i|--interactive) INTERACTIVE='TRUE'
+                          ;;
+
+        # The unload option: -u or --unload
+        -u|--unload)      UNLOAD='TRUE'
+                          ;;
+
+        # An unrecognized option (anything starting with dashes)
+        -*|--*)           echo "Unrecognized option: $1"
+                          helphint
+                          cleanup
+                          return 1
+                          ;;
+
+        # Anything else must be the expected <FILE>
+        *)         ENVFILE=$1
+                   ;;
+
+    esac
+
+    # Shift $1 to the next argument.
+    shift
+
+done
+
+# Make sure the file exists.
+if [ ! -f $ENVFILE ]; then
+    echo "No such file: $ENVFILE"
+    helphint
+    cleanup
+    return 1
+fi
+
+IFS=$'\n'
+
+# If the UNLOAD option was selected, unset all the
+# variables listed in the $ENVFILE.
+if [ "$UNLOAD" == "TRUE" ]; then
+    while read line; do
+
+        # We don't care about empty lines.
+        if [[ -z $line ]]; then
+            continue
+        fi
+
+        # We don't care about comments.
+        if [[ ${line:0:1} == '#' ]]; then
+            continue
+        fi
+
+        # Extract the KEY from the KEY=VALUE pair and unset the variable.
+        KEY=`echo $line | cut -d '=' -f 1`
+        unset "$KEY"
+
+    done < $ENVFILE
+
+# If the INTERACTIVE option was selected, we want to stop on each line
+# in the ENVFILE and ask the user to accept (or change) each value.
+elif [ "$INTERACTIVE" == "TRUE" ]; then
+
+    # We'll collect all the final KEY=VALUE pairs here:
+    OUTPUT=''
+
+    # Handle each line, one at a time.
+
+    for line in $(cat $ENVFILE); do
+
+        # We don't care about empty lines.
+        if [[ -z $line ]]; then
+            continue
+        fi
+
+        # We don't care about comments.
+        if [[ "$line" == "#"* ]]; then
+            continue
+        fi
+
+        # Extract the KEY and VALUE from the KEY=VALUE pair.
+        KEY=`echo $line | cut -d '=' -f 1`
+        VALUE=`echo $line | cut -d '=' -f 2`
+
+        # Ask the user to accept or override the value.
+        read -p "New value for $KEY (was '$VALUE'): " INPUT
+
+        # Export the new KEY=VALUE pair.
+        export $KEY="$INPUT"
+
+        # Add the KEY=VALUE pair to the OUTPUT.
+        OUTPUT=$OUTPUT"$KEY=$INPUT"$'\n'
+
+    done
+
+    # Finally, clear the STDOUT buffer and print out all 
+    # the new KEY=VALUE pairs, in case the user wants to
+    # redirect the output into a file.
+    # clear
+    for line in $OUTPUT; do
+        echo $line
+    done
+
+# Finally, if we're not unloading the variables or setting them
+# interactively, we can load the variables directly into the environment.
+else
+    while read line; do
+
+        # We don't care about empty lines.
+        if [[ -z $line ]]; then
+            continue
+        fi
+
+        # We don't care about comments.
+        if [[ ${line:0:1} == '#' ]]; then
+            continue
+        fi
+
+        # Each line should be in a KEY=VALUE format,
+        # so we can just export it directly.
+        export "$line"
+
+        # Let's also print the line to STDOUT, in case
+        # the user wants to redirect the output into a file.
+        echo "$line"
+
+    done < $ENVFILE
+
+fi
+
+# Make sure we clean up after ourselves.
+cleanup
+return 0
