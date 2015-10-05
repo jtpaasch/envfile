@@ -26,7 +26,7 @@ setup(
     # Describe the project.
     description="Loads/unloads environment variables from a .env file.",
     long_description=long_description,
-    keywords="environment variables",
+    keywords="cli environment variables",
 
     # The project's main homepage.
     url="https://github.com/jtpaasch/envfile",
@@ -71,6 +71,7 @@ setup(
     # Are there any extra dependency groups, e.g., for testing?
     extras_require={
         "test": [
+            "hypthesis",
             "coverage",
             "flake8",
             "pep257",
@@ -80,7 +81,11 @@ setup(
     # This is an executable script, so where is/are the entry point/s?
     entry_points={
         "console_scripts": [
-            "envfile = envfile.application:main",
+
+            # Make a script/executable called ``envfile`` which,
+            # when executed, loads and invokes ``envfile.cli.cli()``.
+            "envfile = envfile.cli:cli",
+
         ],
     },
 

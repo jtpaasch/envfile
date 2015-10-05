@@ -5,3 +5,13 @@ __pycache__
 # Virtual environments
 venv
 pyvenv
+
+# Tox environments
+.tox
+
+# Testing information
+.hypothesis
+
+# Test coverage
+.coverage
+

@@ -1,6 +1,0 @@
-click
-
-[test]
-coverage
-flake8
-pep257
